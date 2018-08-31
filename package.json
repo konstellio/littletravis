@@ -1,8 +1,8 @@
 {
   "name": "littletravis",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/cli.js",
   "bin": {
     "littletravis": "dist/cli.js"
   },
@@ -12,9 +12,20 @@
     "coverage": "rimraf ./coverage && istanbul cover ./node_modules/mocha/bin/_mocha -- --require ts-node/register --full-trace test/**/*.ts",
     "lint": "tslint --project ./tsconfig.json"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/konstellio/littletravis.git"
+  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/konstellio/littletravis/issues"
+  },
+  "homepage": "https://github.com/konstellio/littletravis#readme",
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.0",
     "@types/mocha": "^5.2.5",
