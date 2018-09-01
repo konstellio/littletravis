@@ -42,13 +42,21 @@ commander.version('0.0.1').parse(process.argv);
 				'run',
 				'--rm',
 				'-i',
-				'konstellio/travis-build',
+				'travisci/travis-build',
 				'bash',
 				'-c',
-				`cat > .travis.yml && travis compile --skip-version-check --skip-completion-check`
+				[
+					'cat > .travis.yml',
+					'gem install travis > /dev/null',
+					'echo "y" | travis version > /dev/null',
+					'ln -s `pwd` ~/.travis/travis-build > /dev/null',
+					"echo 'yes' | bundle install > /dev/null",
+					"echo 'yes' | travis compile --skip-version-check --skip-completion-check",
+				].join(' && ')
 			],
 			{
-				windowsVerbatimArguments: false
+				windowsVerbatimArguments: false,
+				// stdio: ['ignore', 'pipe', 'inherit']
 			}
 		);
 
@@ -81,7 +89,6 @@ CMD [ "/home/travis/build.sh" ]`, (err) => {
 	await new Promise((resolve, reject) => {
 		const gitIgnoreFile = createReadStream(gitIgnoreLoc);
 		const dockerIgnoreFile = createWriteStream(dockerIgnoreLoc);
-		// dockerIgnoreFile.on('error', (err) => reject(err));
 		gitIgnoreFile.on('error', (err) => resolve());
 		dockerIgnoreFile.on('close', () => resolve());
 		gitIgnoreFile.pipe(dockerIgnoreFile);
@@ -89,11 +96,8 @@ CMD [ "/home/travis/build.sh" ]`, (err) => {
 
 	const tmpContainerName = `littletravis-${uuid}`;
 
-	// docker build --file .travis.dockerfile -t unique-name .
 	await run('docker', ['build', '--file', '.travis.dockerfile', '-t', tmpContainerName, '.']);
-	// docker run --rm unique-name
 	await run('docker', ['run', '--rm', tmpContainerName], { stdio: ['ignore', 'inherit', 'inherit'] });
-	// docker rmi -f unique-name
 	await run('docker', ['rmi', '-f', tmpContainerName]);
 	
 })();
@@ -103,7 +107,7 @@ function run(command: string, args?: ReadonlyArray<string>, options?: SpawnOptio
 		const proc = spawn(command, args, options);
 		proc.on('close', (code, signal) => {
 			if (code !== 0) {
-				debugger;
+				return reject(new Error(`Unexpected return code ${code} with signal ${signal}.`));
 			}
 			return resolve();
 		});
@@ -123,7 +127,7 @@ function exec(command: string, args?: ReadonlyArray<string>, options?: SpawnOpti
 		});
 		docker.on('close', (code, signal) => {
 			if (code !== 0) {
-				debugger;
+				return reject(new Error(`Unexpected return code ${code} with signal ${signal}.`));
 			}
 			return resolve(out);
 		});
@@ -132,7 +136,7 @@ function exec(command: string, args?: ReadonlyArray<string>, options?: SpawnOpti
 
 async function hasDocker(): Promise<boolean> {
 	try {
-		const version = await exec('docker', ['--version']);
+		await exec('docker', ['--version']);
 		return true;
 	} catch (err) {
 	}

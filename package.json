@@ -7,7 +7,9 @@
     "littletravis": "dist/cli.js"
   },
   "scripts": {
+    "prepublish": "npm run compile",
     "compile": "rimraf dist && tsc --pretty",
+    "watch": "tsc --watch",
     "test": "mocha --require ts-node/register --full-trace test/**/*.ts",
     "coverage": "rimraf ./coverage && istanbul cover ./node_modules/mocha/bin/_mocha -- --require ts-node/register --full-trace test/**/*.ts",
     "lint": "tslint --project ./tsconfig.json"
